@@ -1,0 +1,5 @@
+---
+# defaults file for openwhisk
+openwhisk_release_name: owdev
+openwhisk_hostPort: 80
+openwhisk_apiHostPort: 443

@@ -1,0 +1,109 @@
+---
+# tasks file for openwhisk
+
+# Copyright (C) 2020 Michael Joseph Walsh - All Rights Reserved
+# You may use, distribute and modify this code under the
+# terms of the the license.
+#
+# You should have received a copy of the license within
+# this file. If not, please email <mjwalsh@nemonik.com>
+
+- name: initialize images fact
+  set_fact:
+    images:
+      - { repository: 'openwhisk/alarmprovider', tag: '2.1.0' }
+      - { repository: 'openwhisk/ow-utils', tag: '18bbac5' }
+      - { repository: 'openwhisk/controller', tag: '18bbac5' }
+      - { repository: 'openwhisk/apigateway', tag: '1.0.0' }
+      - { repository: 'openwhisk/kafkaprovider', tag: '2.0.0-incubating' }
+      - { repository: 'openwhisk/cloudantprovider', tag: '2.0.0-incubating' }
+      - { repository: 'zookeeper', tag: '3.4' }
+      - { repository: 'nginx', tag: '1.17' }
+      - { repository: 'redis', tag: '4.0' }
+      - { repository: 'apache/couchdb', tag: '2.3' }
+      - { repository: 'wurstmeister/kafka', tag: '2.12-2.3.1' }
+      - { repository: 'openwhisk/kafkaprovider', tag: '2.0.0-incubating' }
+  when:
+    images_cache_path is defined  
+  tags:
+    - openwhisk
+
+- name: load {{ images }} from cache
+  include_tasks: retrieve_container_image.yml
+  loop: "{{ images }}"
+  when:
+    images_cache_path is defined
+  tags:
+    - openwhisk
+
+- name: is openwhisk  running?
+  shell: kubectl --kubeconfig=/home/{{ ansible_user_id }}/kubeconfig.yml -n openwhisk get pod | grep Running | wc -l
+  register: running
+  tags:
+    - openwhisk
+
+- name: ensure openwhisk is running
+  block:
+  - name: ensure /home/{{ ansible_user_id }}/openwhisk exists
+    file:
+      path: /home/{{ ansible_user_id }}/openwhisk
+      state: directory
+
+  - name: does/home/{{ ansible_user_id }}/openwhisk exist?
+    stat:
+      path: /home/{{ ansible_user_id }}/openwhisk
+    register: openwhisk_folder
+
+  - name: checkout openwhisk helmchart repo
+    git:
+      repo: https://github.com/apache/openwhisk-deploy-kube.git
+      dest: /home/{{ ansible_user_id }}/openwhisk
+      version: 4a9637d938f479b9e1036f991d7d54b1bf74683c
+      depth: 1
+    when: openwhisk_folder.stat.exists and openwhisk_folder.stat.isdir
+
+  - name: ensure files are in place at /home/{{ ansible_user_id }}/openwhisk/helm/openwhisk
+    copy:
+      src: "{{ item }}"
+      dest: /home/{{ ansible_user_id }}/openwhisk/
+      force: yes
+      mode: u=rw,g=r
+    loop:
+      - files/mycluster.yml
+      - files/openwhisk_namespace.yml
+
+  - name: ensure cluster nodes are labelled so that they will be used to execute containers by OpenWhisk's invokers
+    shell: kubectl --kubeconfig=/home/{{ ansible_user_id }}/kubeconfig.yml label nodes --all --overwrite  openwhisk-role=invoker
+
+  - name: ensure openwhisk namespace exists via kubectl
+    shell: kubectl --kubeconfig=/home/{{ ansible_user_id }}/kubeconfig.yml apply -f openwhisk_namespace.yml
+    args:
+      chdir: /home/{{ ansible_user_id }}/openwhisk
+
+  - name: ensure Openwhisk is running via helm 
+    shell: |
+      helm --kubeconfig /home/{{ ansible_user_id }}/kubeconfig.yml install {{ openwhisk_release_name }} ./helm/openwhisk --namespace openwhisk --set whisk.ingress.apiHostName={{ openwhisk_host }} --set whisk.ingress.apiHostPort={{ openwhisk_apiHostPort }} -f mycluster.yml
+    args:
+      chdir: /home/{{ ansible_user_id }}/openwhisk
+
+  - name: template openwhisk_metallab.yml Kubernetes resource files into /home/{{ ansible_user_id }}/openwhisk
+    template:
+      src: templates/openwhisk_metallb.yml.j2
+      dest: /home/{{ ansible_user_id }}/openwhisk/openwhisk_metallb.yml
+      force: yes
+
+  - name: ensure openwhisk_metallb.yml defined resource are applied via kubectl
+    shell: kubectl --kubeconfig=/home/{{ ansible_user_id }}/kubeconfig.yml apply -f openwhisk_metallb.yml
+    args:
+      chdir: /home/{{ ansible_user_id }}/openwhisk
+  when: running.stdout == "0"
+  tags:
+    - openwhisk
+
+- name: save {{ images }} to cache
+  include_tasks: cache_container_image.yml
+  loop: "{{ images }}"
+  when:
+    images_cache_path is defined
+  tags:
+    - openwhisk

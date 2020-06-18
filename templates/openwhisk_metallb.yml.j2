@@ -1,0 +1,28 @@
+---
+# Copyright (C) 2020 Michael Joseph Walsh - All Rights Reserved
+# You may use, distribute and modify this code under the
+# terms of the the license.
+#
+# You should have received a copy of the license with
+# this file. If not, please email <mjwalsh@nemonik.com>
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ openwhisk_release_name }}-openwhisk
+  name: {{ openwhisk_release_name }}-loadbalancer
+  namespace: openwhisk
+spec:
+  ports:
+  - name: http
+    port: {{ openwhisk_hostPort }}
+    targetPort: http
+  - name: http-api
+    port: {{ openwhisk_apiHostPort }}
+    targetPort: http-api
+  selector:
+    app: {{ openwhisk_release_name }}-openwhisk
+    name: {{ openwhisk_release_name }}-nginx
+  type: LoadBalancer
+  loadBalancerIP: {{ openwhisk_host }}
