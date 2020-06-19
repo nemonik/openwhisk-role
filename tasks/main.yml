@@ -23,6 +23,9 @@
       - { repository: 'apache/couchdb', tag: '2.3' }
       - { repository: 'wurstmeister/kafka', tag: '2.12-2.3.1' }
       - { repository: 'openwhisk/kafkaprovider', tag: '2.0.0-incubating' }
+      - { repository: 'openwhisk/action-nodejs-v10', tag: '1.15.0' }
+      - { repository: 'openwhisk/action-golang-v1.11', tag: '1.15.0' }
+      - { repository: 'openwhisk/python3action', tag: '1.14.0' }
   when:
     images_cache_path is defined  
   tags:

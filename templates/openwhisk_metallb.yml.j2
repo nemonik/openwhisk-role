@@ -16,7 +16,7 @@ metadata:
 spec:
   ports:
   - name: http
-    port: {{ openwhisk_hostPort }}
+    port: {{ openwhisk_insecureAPIHostPort }}
     targetPort: http
   - name: http-api
     port: {{ openwhisk_apiHostPort }}

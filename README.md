@@ -10,13 +10,13 @@ Requires Kubernetes.
 
 ## Role Variables
 
-| Variable                | Required | Default               | Choices             | Comments                                         |
-|-------------------------|----------|-----------------------|---------------------|--------------------------------------------------|
-| openwhisk_release_name  | yes      | owdev                 | String value        | The release name                                 |
-| openwhisk_host          | yes      | not defined           | Private IP address  | IP address of OpenWhisk                          |
-| openwhisk_hostPort      | yes      | 80                    | Integer             |                                                  |
-| openwhish_apiHostPort   | yes      | 443                   | Integer value       | API port                                         |
-| images_cache_path       | no       | not defined           | Path                | Path to folder used to cache saved Docker images |
+| Variable                      | Required | Default               | Choices             | Comments                                         |
+|-------------------------------|----------|-----------------------|---------------------|--------------------------------------------------|
+| openwhisk_release_name        | yes      | owdev                 | String value        | The release name                                 |
+| openwhisk_host                | yes      | not defined           | Private IP address  | IP address of OpenWhisk                          |
+| openwhisk_insecureAPIHostPort | yes      | 80                    | Integer value       | Insecure API port                                |
+| openwhish_apiHostPort         | yes      | 443                   | Integer value       | Secure API port                                  |
+| images_cache_path             | no       | not defined           | Path                | Path to folder used to cache saved Docker images |
 
 ## Example Playbook
 
