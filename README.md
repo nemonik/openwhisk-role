@@ -17,6 +17,7 @@ Requires Kubernetes.
 | openwhisk_insecureAPIHostPort | yes      | 80                    | Integer value       | Insecure API port                                |
 | openwhish_apiHostPort         | yes      | 443                   | Integer value       | Secure API port                                  |
 | images_cache_path             | no       | not defined           | Path                | Path to folder used to cache saved Docker images |
+| cache_container_timeout       | no       | 300 seconds           | Integer value       | Number of seconds before Ansible times out       |              
 
 ## Example Playbook
 
